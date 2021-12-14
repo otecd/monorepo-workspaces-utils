@@ -20,7 +20,6 @@
     "build": "rm -rf dist && tsc && chmod -R +x dist"
   },
   "devDependencies": {
-    "typescript": "4.5.3",
     "zx": "4.2.0"
   }
 }

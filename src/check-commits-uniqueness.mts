@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { $, argv, chalk } from 'zx';
+import type * as zx from 'zx/globals.d';
 
 $.verbose = false;
 
