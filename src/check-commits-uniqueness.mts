@@ -7,8 +7,7 @@ $.verbose = false;
 const [, GIT_REV_TO_COMPARE] = argv._;
 
 if (!GIT_REV_TO_COMPARE) {
-  console.error(chalk.red('Error!') + ' Required argument is missed. You have to type a git revision to compare with it');
-  process.exit(1);
+  throw new Error('Required argument is missed. You have to type a git revision to compare with it')
 }
 
 const origRev = (await $ `git rev-parse --short @`).toString().trim();
@@ -18,38 +17,36 @@ let workspacesParsed: [string, string][];
 await $ `git checkout -f ${GIT_REV_TO_COMPARE}`;
 await $ `git checkout -f ${origRev}`;
 
-try {
-  workspacesConfig = JSON.parse((await $`npm pkg get repository.directory --ws --json`).stdout);
-  workspacesParsed = Object.entries(workspacesConfig);
+workspacesConfig = JSON.parse((await nothrow($`npm pkg get repository.directory --ws --json`)).stdout) || {};
+workspacesParsed = Object.entries(workspacesConfig);
 
-  if (!workspacesParsed || !workspacesParsed.length) throw new Error();
-} catch (error) {
-  console.log('Here is no workspaces in root package.json');
-  process.exit();
-}
+const rootPkgName: string = JSON.parse((await $`npm pkg get name --json`).stdout);
 
-let commits: Set<string> = new Set();
-const updateCommits = (pkgName: string, prevCommits: Set<string>, newCommits: Set<string>) => {
-  const updatedCommits = new Set(Array.from(prevCommits).concat(Array.from(newCommits)));
+if (!workspacesParsed || !workspacesParsed.length) {
+  await $`echo "OK! Here is no workspaces in root package.json"`;
+} else {
+  let commits: Set<string> = new Set();
+  const output: Record<string, string> = {};
+  const updateCommits = (pkgName: string, prevCommits: Set<string>, newCommits: Set<string>) => {
+    const updatedCommits = new Set(Array.from(prevCommits).concat(Array.from(newCommits)));
 
-  if (updatedCommits.size !== prevCommits.size + newCommits.size) {
-    throw new Error(`Duplicated commits were found in ${pkgName} package`);
-  }
-  return updatedCommits;
-};
+    if (updatedCommits.size !== prevCommits.size + newCommits.size) {
+      throw new Error(`Duplicated commits were found in ${pkgName} package`);
+    }
+    return updatedCommits;
+  };
 
-try {
   await Promise.all(workspacesParsed.map(async ([name, directory]) => {
-    commits = updateCommits(name, commits, new Set((await $`git log @...${GIT_REV_TO_COMPARE} --pretty=format:"%h" -- ${directory}`).stdout.split('\n')));
+    const newCommits = new Set((await $`git log @...${GIT_REV_TO_COMPARE} --pretty=format:"%h" -- ${directory}`).stdout.split('\n'));
+
+    commits = updateCommits(name, commits, newCommits);
+
+    if (newCommits.size) output[name] = directory;
   }));
-  
+
   const excludedDirs = Object.values(workspacesConfig).map(s => `:!${s}`);
-  const rootPkgName: string = JSON.parse((await $`npm pkg get name --json`).stdout);
 
   commits = updateCommits(rootPkgName, commits, new Set((await $`git log @...${GIT_REV_TO_COMPARE} --pretty=format:"%h" -- . ${excludedDirs}`).stdout.split('\n')));
-} catch (error) {
-  console.error(chalk.red('Error!') + ' ' + error.message);
-  process.exit(228);
+  await $`echo "OK! No duplicated commits here"`;
+  console.log(JSON.stringify(output));
 }
-
-console.log('Ok! No duplicated commits here');
