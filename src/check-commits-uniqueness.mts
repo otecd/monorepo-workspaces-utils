@@ -23,7 +23,8 @@ workspacesParsed = Object.entries(workspacesConfig);
 const rootPkgName: string = JSON.parse((await $`npm pkg get name --json`).stdout);
 
 if (!workspacesParsed || !workspacesParsed.length) {
-  console.log('Ok! Here is no workspaces in root package.json');
+  await $`echo "OK! Here is no workspaces in root package.json"`;
+  console.log(rootPkgName);
 } else {
   let commits: Set<string> = new Set();
   const output: Record<string, string> = {};
@@ -47,6 +48,6 @@ if (!workspacesParsed || !workspacesParsed.length) {
   const excludedDirs = Object.values(workspacesConfig).map(s => `:!${s}`);
 
   commits = updateCommits(rootPkgName, commits, new Set((await $`git log @...${GIT_REV_TO_COMPARE} --pretty=format:"%h" -- . ${excludedDirs}`).stdout.split('\n')));
-  console.log('Ok! No duplicated commits here');
+  await $`echo "OK! No duplicated commits here"`;
   console.log(JSON.stringify(output));
 }
