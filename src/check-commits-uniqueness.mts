@@ -24,7 +24,6 @@ const rootPkgName: string = JSON.parse((await $`npm pkg get name --json`).stdout
 
 if (!workspacesParsed || !workspacesParsed.length) {
   await $`echo "OK! Here is no workspaces in root package.json"`;
-  console.log(rootPkgName);
 } else {
   let commits: Set<string> = new Set();
   const output: Record<string, string> = {};
