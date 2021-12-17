@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { $, argv, nothrow } from 'zx';
+import { $, argv, nothrow, fs } from 'zx';
 
 const [, GIT_REV_TO_COMPARE] = argv._;
 
@@ -50,5 +50,5 @@ if (!workspacesParsed || !workspacesParsed.length) {
     newCommits: Array.from(new Set((await $`git log @...${GIT_REV_TO_COMPARE} --pretty=format:"%h" -- . ${excludedDirs}`).stdout.split('\n'))),
   });
   await $`echo "OK! No duplicated commits here"`;
-  console.log(JSON.stringify(output));
+  await fs.outputJson('/tmp/check-commits-uniqueness-log.json', output);
 }
