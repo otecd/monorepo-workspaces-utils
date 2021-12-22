@@ -1,6 +1,6 @@
 #!/usr/bin/env zx
 
-import { $, argv, nothrow, fs } from 'zx';
+import { $, argv, chalk, fs } from 'zx';
 
 const [, GIT_REV_TO_COMPARE] = argv._;
 
@@ -14,12 +14,19 @@ const origRev = (await $ `git rev-parse --short @`).toString().trim();
 await $ `git checkout -f ${GIT_REV_TO_COMPARE}`;
 await $ `git checkout -f ${origRev}`;
 
-const workspacesConfig: Record<string, string> = JSON.parse((await nothrow($`npm pkg get repository.directory --ws --json`)).stdout) || {};
+let workspacesConfig: Record<string, string> = {};
+
+try {
+  workspacesConfig = JSON.parse((await $`npm pkg get repository.directory --ws --json`).toString().trim());
+  if (typeof workspacesConfig !== 'object') workspacesConfig = {};
+} catch (error) {
+  console.warn(chalk.yellow('Warning!'), error.message);
+}
 const workspacesParsed = Object.entries(workspacesConfig);
 const rootPkgName: string = JSON.parse((await $`npm pkg get name --json`).stdout);
 
-if (!workspacesParsed || !workspacesParsed.length) {
-  await $`echo "OK! Here is no workspaces in root package.json"`;
+if (!workspacesParsed || !workspacesParsed.length || workspacesParsed[0].length < 2) {
+  console.log(chalk.green('OK!'), 'Here is no workspaces in root package.json');
 } else {
   let commits: Set<string> = new Set();
   const output: Record<string, string> = {};
@@ -52,6 +59,6 @@ if (!workspacesParsed || !workspacesParsed.length) {
       newCommits: (await $`git log @...${GIT_REV_TO_COMPARE} --pretty=format:"%h" -- . ${excludedDirs}`).toString().trim().split('\n').filter((v) => v),
     });
   }
-  await $`echo "OK! No duplicated commits here"`;
+  console.log(chalk.green('OK!'), 'No duplicated commits here');
   await fs.outputJson('/tmp/check-commits-uniqueness-log.json', output);
 }
