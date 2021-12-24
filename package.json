@@ -1,7 +1,7 @@
 {
   "name": "monorepo-workspaces-utils",
   "description": "Helpful scripts to work with workspaces packages on monorepo",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "license": "MIT",
   "author": "Dmitrii Pron <idimzz@gmail.com>",
   "repository": "github:papadima/monorepo-workspaces-utils",
