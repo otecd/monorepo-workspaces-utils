@@ -13,7 +13,8 @@
     "access": "public"
   },
   "bin": {
-    "check-commits-uniqueness": "./dist/check-commits-uniqueness.mjs"
+    "check-commits-uniqueness": "./dist/cli/check-commits-uniqueness.mjs",
+    "get-all-workspaces": "./dist/cli/get-all-workspaces.mjs"
   },
   "scripts": {
     "start": "echo start",

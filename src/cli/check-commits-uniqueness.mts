@@ -1,6 +1,7 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 
 import { $, argv, chalk, fs } from 'zx';
+import getAllWorkspacesIfAny from '../get-all-workspaces-if-any.mjs';
 
 const [, GIT_REV_TO_COMPARE] = argv._;
 
@@ -14,21 +15,14 @@ const origRev = (await $ `git rev-parse --short @`).toString().trim();
 await $ `git checkout -f ${GIT_REV_TO_COMPARE}`;
 await $ `git checkout -f ${origRev}`;
 
-let workspacesConfig: Record<string, string> = {};
-
-try {
-  workspacesConfig = JSON.parse((await $`npm pkg get repository.directory --ws --json`).toString().trim());
-  if (typeof workspacesConfig !== 'object') workspacesConfig = {};
-} catch (error) {
-  console.warn(chalk.yellow('Warning!'), error.message);
-}
-const workspacesParsed = Object.entries(workspacesConfig);
+const workspacesConfig = await getAllWorkspacesIfAny();
 const rootPkgName: string = JSON.parse((await $`npm pkg get name --json`).stdout);
 
-if (!workspacesParsed || !workspacesParsed.length || workspacesParsed[0].length < 2) {
+if (!workspacesConfig) {
   console.log(chalk.green('OK!'), 'Here is no workspaces in root package.json');
 } else {
   let commits: Set<string> = new Set();
+  const workspacesParsed = Object.entries(workspacesConfig);
   const output: Record<string, string> = {};
   const updateCommits = ({ pkgName = '', prevCommits = [], newCommits = [] }: {
     pkgName: string,
