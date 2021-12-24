@@ -3,7 +3,7 @@
 import { $, argv, chalk, fs } from 'zx';
 import getAllWorkspacesIfAny from '../get-all-workspaces-if-any.mjs';
 
-const [, GIT_REV_TO_COMPARE] = argv._;
+const [GIT_REV_TO_COMPARE] = argv._;
 
 if (!GIT_REV_TO_COMPARE) {
   throw new Error('Required argument is missed. You have to type a git revision to compare with it')
