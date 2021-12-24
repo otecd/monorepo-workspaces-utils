@@ -1,7 +1,7 @@
 {
   "name": "monorepo-workspaces-utils",
   "description": "Helpful scripts to work with workspaces packages on monorepo",
-  "version": "1.3.1",
+  "version": "1.4.3",
   "license": "MIT",
   "author": "Dmitrii Pron <idimzz@gmail.com>",
   "repository": "github:papadima/monorepo-workspaces-utils",
@@ -13,7 +13,8 @@
     "access": "public"
   },
   "bin": {
-    "check-commits-uniqueness": "./dist/check-commits-uniqueness.mjs"
+    "check-commits-uniqueness": "./dist/cli/check-commits-uniqueness.mjs",
+    "get-all-workspaces": "./dist/cli/get-all-workspaces.mjs"
   },
   "scripts": {
     "start": "echo start",
